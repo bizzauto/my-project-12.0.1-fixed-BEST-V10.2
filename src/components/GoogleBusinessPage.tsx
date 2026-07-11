@@ -49,7 +49,7 @@ const GoogleBusinessPage: React.FC = () => {
   const handleConnectGoogle = async () => {
     try {
       const authUrlRes = await googleBusinessAPI.getAuthUrl();
-      const authUrl = authUrlRes.data?.data?.authUrl || authUrlRes.data?.authUrl;
+      const authUrl = authUrlRes.data?.data?.url || authUrlRes.data?.url || authUrlRes.data?.authUrl;
       if (authUrl) {
         window.location.href = authUrl;
       } else {
