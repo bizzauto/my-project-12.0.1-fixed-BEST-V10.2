@@ -30,7 +30,7 @@ export default function AuditTrailExportPage() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/audit-log?limit=100', {
+      const res = await fetch('/api/admin/audit-log?limit=100', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();

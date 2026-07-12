@@ -26,7 +26,7 @@ export default function DataBackupPage() {
   const createBackup = async () => {
     setCreating(true);
     try {
-      const res = await fetch('/api/backup/create', {
+      const res = await fetch('/api/ai/backup', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });

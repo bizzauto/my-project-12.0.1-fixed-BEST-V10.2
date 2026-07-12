@@ -329,7 +329,7 @@ export const subscriptionsAPI = {
   getPlans: () => apiClient.get('/subscriptions/plans'),
   createCheckout: (data: { plan: string; period: string }) =>
     apiClient.post('/subscriptions/checkout', data),
-  createSubscription: (data: any) => apiClient.post('/subscriptions/create', data),
+  createSubscription: (data: any) => apiClient.post('/subscriptions/checkout', data),
   cancel: (reason?: string) => apiClient.post('/subscriptions/cancel', { reason }),
   upgrade: (plan: string) => apiClient.post('/subscriptions/upgrade', { plan }),
   verify: (data: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string; plan: string; period: string }) =>
@@ -952,10 +952,10 @@ export const adminInfrastructureAPI = {
 
 // ==================== ADMIN ANALYTICS API ====================
 export const adminAnalyticsAPI = {
-  getAnalytics: () => apiClient.get('/admin/analytics/analytics'),
+  getAnalytics: () => apiClient.get('/admin/analytics'),
   getFeatureFlags: () => apiClient.get('/admin/feature-flags'),
   updateFeatureFlags: (flags: Record<string, boolean>) => apiClient.put('/admin/feature-flags', flags),
-  getAuditLog: (params?: Record<string, any>) => apiClient.get('/admin/analytics/audit-log', { params }),
+  getAuditLog: (params?: Record<string, any>) => apiClient.get('/admin/audit-log', { params }),
 };
 
 // ==================== BLOG API ====================
@@ -1061,7 +1061,7 @@ export const leadGenerationAPI = {
   listLeads: (params?: any) => apiClient.get('/leads', { params }),
   getIndiamartConfig: () => apiClient.get('/indiamart-email/config'),
   syncIndiamart: () => apiClient.post('/indiamart-email/sync'),
-  debugIndiamartEmails: () => apiClient.get('/indiamart-email/debug-emails'),
+  debugIndiamartEmails: () => apiClient.post('/indiamart-email/debug-emails'),
   connectIndiamart: (data: any) => apiClient.post('/indiamart-email/connect', data),
   setupIndiamart: (data: any) => apiClient.post('/indiamart-email/setup', data),
   createManualLead: (data: any) => apiClient.post('/leads/manual', data),
@@ -1078,12 +1078,12 @@ export const appointmentsBookingAPI = {
 
 // ==================== DATA BACKUP API ====================
 export const dataBackupAPI = {
-  create: () => apiClient.post('/backup/create'),
+  create: () => apiClient.post('/ai/backup'),
 };
 
 // ==================== AUDIT TRAIL EXPORT API ====================
 export const auditTrailExportAPI = {
-  list: (params?: any) => apiClient.get('/audit-log', { params }),
+  list: (params?: any) => apiClient.get('/admin/audit-log', { params }),
   export: (params?: any) => apiClient.get('/team/audit-logs/export', { params, responseType: 'blob' }),
 };
 
@@ -1122,7 +1122,7 @@ export const aiSalesAssistantAPI = {
 
 // ==================== SMART REPLY API ====================
 export const smartReplyAPI = {
-  get: (params?: any) => apiClient.get('/ai/smart-replies', { params }),
+  post: (data: any) => apiClient.post('/ai/smart-replies', data),
 };
 
 // ==================== REFERRALS API ====================

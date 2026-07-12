@@ -56,7 +56,7 @@ export default function LeadGenerationPage(){
     setDeployMsg(null);
     try{
       const token=localStorage.getItem('token');
-      const r=await fetch('/api/automations/deploy-template',{
+      const r=await fetch('/api/automation/deploy-template',{
         method:'POST',
         headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
         body:JSON.stringify({templateId,name:templateName})
