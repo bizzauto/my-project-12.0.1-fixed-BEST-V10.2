@@ -59,9 +59,17 @@ tmp/
 # Deployment agent (local tool, not part of project)
 deploy-agent/
 
-# Extra files / mobile app (huge, not needed in Docker build)
+# Extra files / mobile app
 EXTRA/
-mobile-app/
+# Track mobile-app source (Capacitor config, native manifests) but ignore
+# heavy build artifacts and dependencies.
+mobile-app/node_modules/
+mobile-app/android/app/build/
+mobile-app/android/.gradle/
+mobile-app/android/local.properties
+mobile-app/ios/App/Pods/
+mobile-app/ios/App/build/
+mobile-app/ios/App/DerivedData/
 *.zip
 
 # Platform-specific generated files (auto-created by deploy agent)
