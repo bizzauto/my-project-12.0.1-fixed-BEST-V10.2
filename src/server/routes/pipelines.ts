@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { prisma } from '../db.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { cacheResponse } from '../middleware/cache.js';
 
 const router = Router();
 
 // GET /api/pipelines - List all pipelines with stages
-router.get('/', authenticate, async (req: AuthRequest, res: any) => {
+router.get('/', authenticate, cacheResponse(30), async (req: AuthRequest, res: any) => {
   try {
     const businessId = req.user.businessId;
 

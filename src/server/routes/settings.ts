@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
+import { cacheResponse } from '../middleware/cache.js';
 
 const router = Router();
 router.use(authenticate);
@@ -8,7 +9,7 @@ router.use(authenticate);
 // ==================== WHITE LABEL ====================
 
 // Get white-label settings
-router.get('/', async (req: any, res: any) => {
+router.get('/', cacheResponse(60), async (req: any, res: any) => {
   try {
     let settings = await prisma.whiteLabel.findUnique({
       where: { businessId: req.user.businessId },
@@ -43,7 +44,7 @@ router.put('/', requireRole('OWNER', 'ADMIN'), async (req: any, res: any) => {
 
 // ==================== THEME PREFERENCES ====================
 
-router.get('/theme', async (req: any, res: any) => {
+router.get('/theme', cacheResponse(60), async (req: any, res: any) => {
   try {
     let prefs = await prisma.themePreference.findUnique({
       where: { userId: req.user.id },
@@ -78,7 +79,7 @@ router.put('/theme', async (req: any, res: any) => {
 // ==================== APPOINTMENTS ====================
 
 // Get appointments
-router.get('/appointments', async (req: any, res: any) => {
+router.get('/appointments', cacheResponse(60), async (req: any, res: any) => {
   try {
     const { status, startDate, endDate } = req.query;
     const where: any = { businessId: req.user.businessId };

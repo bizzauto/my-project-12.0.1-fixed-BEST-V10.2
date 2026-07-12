@@ -2,6 +2,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
+import { hashApiKey } from '../middleware/api-key-auth.js';
 import { checkUserLimit } from '../middleware/planLimits.js';
 import { hashPassword } from '../utils/auth.js';
 
@@ -671,14 +672,16 @@ router.post('/api-keys', requireRole('OWNER', 'ADMIN'), async (req: any, res: an
     }
 
     // Generate API key
-    const key = `bizz_${crypto.randomBytes(32).toString('hex')}`;
+    const key = `bka_${crypto.randomBytes(32).toString('hex')}`;
     const prefix = key.substring(0, 12) + '...';
+    const keyHash = hashApiKey(key);
 
     const apiKey = await prisma.apiKey.create({
       data: {
         business: { connect: { id: req.user.businessId } },
         name,
         key,
+        keyHash,
         prefix,
         permissions,
         expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : null,

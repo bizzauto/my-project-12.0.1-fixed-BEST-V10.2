@@ -298,7 +298,23 @@ router.get('/google/callback', async (req: Request, res: Response) => {
       role: user.role,
     });
 
-    // Redirect to frontend with tokens
+    // Set tokens as httpOnly cookies (authoritative source)
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: '/',
+    });
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      path: '/',
+    });
+
+    // Redirect to frontend with tokens (kept for backward compatibility during transition)
     const params = new URLSearchParams({
       token,
       refreshToken,

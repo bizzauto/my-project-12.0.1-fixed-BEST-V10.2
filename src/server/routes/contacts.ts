@@ -2,13 +2,14 @@ import { Router } from 'express';
 import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { cacheResponse } from '../middleware/cache.js';
 import { checkContactLimit } from '../middleware/planLimits.js';
 import { createContactSchema, updateContactSchema, importContactsSchema } from '../validations/schemas.js';
 
 const router = Router();
 
 // Get all contacts with filtering and pagination
-router.get('/', authenticate, async (req: any, res: any) => {
+router.get('/', authenticate, cacheResponse(30), async (req: any, res: any) => {
   try {
     const { page = 1, limit = 50, search, tags, pipelineId, stageId } = req.query;
     const skip = (Number(page) - 1) * Number(limit);

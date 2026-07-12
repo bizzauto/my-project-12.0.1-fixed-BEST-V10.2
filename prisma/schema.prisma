@@ -1516,6 +1516,7 @@ model ApiKey {
   businessId  String
   name        String
   key         String    @unique
+  keyHash     String?   @unique
   permissions Json
   lastUsedAt  DateTime?
   expiresAt   DateTime?

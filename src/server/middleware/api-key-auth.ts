@@ -57,9 +57,15 @@ export function authenticateApiKey(requiredPermissions?: string[]) {
         return;
       }
 
-      // Find the key in the database (stored as raw key in the 'key' field)
+      // Find the key in the database — try hash lookup first, fallback to raw for backward compat
+      const incomingHash = hashApiKey(apiKeyRaw);
       const apiKey = await prisma.apiKey.findFirst({
-        where: { key: apiKeyRaw },
+        where: {
+          OR: [
+            { keyHash: incomingHash },
+            { key: apiKeyRaw },  // backward compat for unmigrated keys
+          ],
+        },
         include: { business: { select: { id: true, name: true, plan: true, isActive: true } } } as any,
       });
 

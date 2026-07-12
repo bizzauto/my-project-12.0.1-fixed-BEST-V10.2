@@ -2,6 +2,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db.js';
 import { authenticate, AuthRequest, validateWebhook, generateWebhookSecret } from '../middleware/auth.js';
+import { cacheResponse } from '../middleware/cache.js';
 import { LeadCaptureService } from '../services/lead-capture.service.js';
 import { WhatsAppService } from '../services/whatsapp.service.js';
 import { EmailService } from '../services/email.service.js';
@@ -267,7 +268,7 @@ router.post('/manual', authenticate, leadCaptureLimiter, async (req: AuthRequest
  * GET /api/leads
  * List all leads with filters
  */
-router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
+router.get('/', authenticate, cacheResponse(30), async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user.businessId;
 

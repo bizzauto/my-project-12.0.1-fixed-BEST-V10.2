@@ -206,8 +206,8 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`[CORS] Origin not in allowlist — allowing: ${origin}`);
-      callback(null, true);
+      console.warn(`[CORS] Origin BLOCKED: ${origin}`);
+      callback(new Error('Not allowed by CORS'), false);
     }
   },
   credentials: true,

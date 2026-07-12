@@ -41,7 +41,9 @@ export default function AuthCallback() {
         if (onboardingCompleted) store.setOnboardingCompleted(true);
         if (admissionCompleted) store.setAdmissionCompleted(true);
 
+        // Strip tokens from URL immediately to prevent exposure in browser history
         const redirectPath = role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
+        window.history.replaceState({}, '', redirectPath);
         navigate(redirectPath, { replace: true });
       } catch (err) {
         console.error('[AuthCallback] Failed:', err);

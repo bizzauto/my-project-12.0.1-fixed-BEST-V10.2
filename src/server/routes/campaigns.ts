@@ -2,13 +2,14 @@ import { Router } from 'express';
 import { prisma } from '../db.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { cacheResponse } from '../middleware/cache.js';
 import { createCampaignSchema, updateCampaignSchema, scheduleCampaignSchema } from '../validations/crm-schemas.js';
 import { outreachQueue } from '../workers/outreach.worker.js';
 
 const router = Router();
 
 // Get all campaigns
-router.get('/', authenticate, async (req: any, res: any) => {
+router.get('/', authenticate, cacheResponse(30), async (req: any, res: any) => {
   try {
     const { page = 1, limit = 50, status, type } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
