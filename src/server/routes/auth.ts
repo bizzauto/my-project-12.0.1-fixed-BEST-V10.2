@@ -901,6 +901,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
           role: user.role,
           businessId: user.businessId,
           image: user.image,
+          admissionCompleted: user.business?.admissionCompleted ?? false,
         },
         business: user.business ? {
           id: user.business.id,
@@ -910,6 +911,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
           plan: user.business.plan,
           aiCreditsUsed: user.business.aiCreditsUsed,
           aiCreditsLimit: user.business.aiCreditsLimit,
+          admissionCompleted: user.business.admissionCompleted,
         } : null,
       },
     });

@@ -29,8 +29,30 @@ export const MobileApp = {
 
       // Hide splash screen after app is ready
       await SplashScreen.hide();
+
+      // Harden native navigation (hardware back, etc.)
+      this.setupNativeNavigation();
     } catch (err) {
       console.log('Mobile init error:', err);
+    }
+  },
+
+  // Native navigation hardening (no extra plugins required)
+  // - Prevents the Android hardware back button from exiting the app on the
+  //   first screen, and lets open modals/overlays react to the back gesture.
+  setupNativeNavigation() {
+    if (!isNative) return;
+    try {
+      // Seed an extra history entry so the first hardware-back doesn't leave.
+      window.history.pushState({ capNative: true }, '');
+      window.addEventListener('popstate', () => {
+        // Notify listeners (modals/overlays) so they can close themselves.
+        window.dispatchEvent(new CustomEvent('mobile-hardware-back'));
+        // Re-seed to keep the app alive instead of exiting.
+        window.history.pushState({ capNative: true }, '');
+      });
+    } catch (err) {
+      console.log('Native navigation setup error:', err);
     }
   },
 

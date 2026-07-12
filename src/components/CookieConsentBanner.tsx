@@ -58,7 +58,7 @@ const CookieConsentBanner: React.FC = () => {
       <div className="fixed inset-0 bg-black/50 z-[9998] pointer-events-none" />
 
       {/* Banner */}
-      <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-2xl">
+      <div className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-2xl bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] sm:bottom-0">
         <div className="max-w-6xl mx-auto px-4 py-4">
           {!showDetails ? (
             /* Simple Banner */

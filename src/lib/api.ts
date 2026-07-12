@@ -11,6 +11,16 @@ const API_BASE_URL = isNative
   ? (import.meta.env.VITE_API_URL || 'https://bizzauto.com/api')
   : '/api';
 
+// Guard against the common mobile-build mistake: shipping without VITE_API_URL
+// makes every API call hit the placeholder domain and silently bricks the app.
+if (isNative && !import.meta.env.VITE_API_URL) {
+  console.error(
+    '[api] VITE_API_URL is not set. Native API calls will hit the placeholder ' +
+    'URL. Set VITE_API_URL when building the mobile web bundle (e.g. ' +
+    'VITE_API_URL=https://your-server.com/api npm run build).'
+  );
+}
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {

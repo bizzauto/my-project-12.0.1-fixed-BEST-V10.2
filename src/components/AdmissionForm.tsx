@@ -169,6 +169,12 @@ const marketingChannels = [
   'Influencer Marketing', 'Print Media', 'TV/Radio', 'None'
 ];
 
+const CURRENT_YEAR = new Date().getFullYear();
+
+const stepLabels = [
+  'Personal', 'Business', 'Details', 'Goals', 'Bank & Social', 'Upload & Agree'
+];
+
 const AdmissionForm: React.FC = () => {
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
@@ -209,7 +215,9 @@ const AdmissionForm: React.FC = () => {
       case 1:
         if (!form.fullName.trim()) { setError('Full name is required'); return false; }
         if (!form.email.trim()) { setError('Email is required'); return false; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('Enter a valid email address'); return false; }
         if (!form.phone.trim()) { setError('Phone number is required'); return false; }
+        if (!/^[+]?[\d\s-]{8,15}$/.test(form.phone.trim())) { setError('Enter a valid phone number'); return false; }
         return true;
       case 2:
         if (!form.businessName.trim()) { setError('Business name is required'); return false; }
@@ -422,7 +430,7 @@ const AdmissionForm: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year Established</label>
                 <input type="number" value={form.yearEstablished} onChange={(e) => handleChange('yearEstablished', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-                  placeholder="2020" min="1900" max="2024" />
+                  placeholder="2020" min="1900" max={CURRENT_YEAR} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Number of Employees</label>
@@ -681,26 +689,45 @@ const AdmissionForm: React.FC = () => {
           </p>
         </div>
 
-        {/* Progress Bar */}
+        {/* Stepper */}
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-              Step {step} of {totalSteps}
-            </span>
-            <span className="text-sm font-medium text-blue-600">
-              {Math.round((step / totalSteps) * 100)}% Complete
-            </span>
-          </div>
-          <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full transition-all duration-300"
-              style={{ width: `${(step / totalSteps) * 100}%` }} />
-          </div>
-          <div className="flex justify-between mt-2">
-            {['Personal', 'Business', 'Details', 'Goals', 'Bank & Social', 'Upload & Agree'].map((label, i) => (
-              <span key={i} className={`text-xs ${i < step ? 'text-blue-600 font-medium' : 'text-gray-400'}`}>
-                {label}
-              </span>
-            ))}
+          <div className="flex items-center justify-between">
+            {stepLabels.map((label, i) => {
+              const stepNum = i + 1;
+              const isCompleted = stepNum < step;
+              const isActive = stepNum === step;
+              return (
+                <React.Fragment key={label}>
+                  <div className="flex flex-col items-center text-center flex-1 min-w-0">
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
+                        isCompleted
+                          ? 'bg-green-600 text-white'
+                          : isActive
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/40'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
+                      {isCompleted ? <Check size={16} /> : stepNum}
+                    </div>
+                    <span
+                      className={`mt-2 text-xs px-1 leading-tight ${
+                        isActive
+                          ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                          : isCompleted
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-gray-400'
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                  {i < stepLabels.length - 1 && (
+                    <div className={`h-0.5 flex-1 mx-1 mb-6 rounded ${i < step - 1 ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-700'}`} />
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         </div>
 
@@ -745,7 +772,12 @@ const AdmissionForm: React.FC = () => {
 
         {/* Skip Option */}
         <div className="text-center mt-4">
-          <button type="button" onClick={() => {
+          <button type="button" onClick={async () => {
+            try {
+              await api.post('/admission/skip');
+            } catch {
+              /* ignore — local flag still set below */
+            }
             localStorage.setItem('admissionCompleted', 'true');
             setAdmissionCompleted(true);
             navigate('/dashboard', { replace: true });

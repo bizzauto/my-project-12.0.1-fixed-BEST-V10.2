@@ -78,9 +78,9 @@ export default function AIGenerationModal({ onClose, onWorkflowGenerated }: AIGe
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
       <div
-        className="relative w-full max-w-lg mx-4 bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
+        className="relative w-full sm:max-w-lg m-0 sm:mx-4 bg-gray-800 border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl shadow-black/50 overflow-hidden max-h-[90vh] sm:max-h-[85vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

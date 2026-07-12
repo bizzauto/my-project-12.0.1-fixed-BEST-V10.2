@@ -909,7 +909,7 @@ export default function LiveChatManager() {
           ASSIGN AGENT MODAL
       ========================================== */}
       {showAssignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
           <div className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">Assign Agent</h3>

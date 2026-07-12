@@ -403,9 +403,11 @@ const LoginPage: React.FC = () => {
               <p className="text-sm sm:text-base text-gray-500 mb-6">{t('login.verifyDesc', 'Enter 6-digit code')}</p>
               <form onSubmit={handleTwoFactorSubmit} className="space-y-5">
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   value={twoFactorCode}
-                  onChange={(e) => setTwoFactorCode(e.target.value)}
+                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
                   className="w-full text-center text-2xl tracking-widest p-3 border rounded-lg"
                   placeholder="000000"
                   maxLength={6}

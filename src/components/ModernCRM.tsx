@@ -475,8 +475,8 @@ const LeadCard: React.FC<{ lead: any }> = ({ lead }) => (
 
 // NEW LEAD MODAL
 const NewLeadModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm ai-fade-in-up" onClick={onClose}>
-    <div className="ai-glass rounded-3xl p-5 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm ai-fade-in-up" onClick={onClose}>
+    <div className="ai-glass rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg sm:text-xl font-black text-white">New Lead</h2>
         <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-lg"><XIcon size={18} className="text-slate-300" /></button>

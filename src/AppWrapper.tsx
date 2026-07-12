@@ -356,7 +356,9 @@ function AppRoutes() {
       <Route path="/pay/:shortCode" element={<PayPage />} />
       <Route path="/checkout" element={
         <ProtectedRoute>
-          <CheckoutPage />
+          <AuthLayout>
+            <CheckoutPage />
+          </AuthLayout>
         </ProtectedRoute>
       } />
       <Route path="/order-tracking" element={
@@ -428,7 +430,9 @@ function AppRoutes() {
       <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
       <Route path="/my-account" element={
         <ProtectedRoute>
-          <CustomerAccountPage />
+          <AuthLayout>
+            <CustomerAccountPage />
+          </AuthLayout>
         </ProtectedRoute>
       } />
       <Route path="/bulk-import" element={
@@ -627,7 +631,11 @@ function AppRoutes() {
       <Route
         path="/course-store"
         element={
-            <CourseStore />
+          <ProtectedRoute>
+            <AuthLayout>
+              <CourseStore />
+            </AuthLayout>
+          </ProtectedRoute>
         }
       />
       <Route
@@ -644,7 +652,9 @@ function AppRoutes() {
         path="/course-player/:courseId"
         element={
           <ProtectedRoute>
-            <CoursePlayer />
+            <AuthLayout>
+              <CoursePlayer />
+            </AuthLayout>
           </ProtectedRoute>
         }
       />
@@ -672,7 +682,9 @@ function AppRoutes() {
         path="/funnels/:id/preview"
         element={
           <ProtectedRoute>
-            <FunnelPreviewPage />
+            <AuthLayout>
+              <FunnelPreviewPage />
+            </AuthLayout>
           </ProtectedRoute>
         }
       />

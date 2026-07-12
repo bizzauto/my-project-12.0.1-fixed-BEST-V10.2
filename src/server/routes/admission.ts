@@ -153,6 +153,33 @@ router.post('/submit', authenticate, upload.fields([
   }
 });
 
+// Skip admission form — mark setup as completed without submitting details
+router.post('/skip', authenticate, async (req: any, res: any) => {
+  try {
+    const businessId = req.user.businessId;
+
+    if (!businessId) {
+      return res.status(400).json({ success: false, error: 'Business ID not found' });
+    }
+
+    await prisma.business.update({
+      where: { id: businessId },
+      data: { admissionCompleted: true },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        message: 'Admission form skipped',
+        admissionCompleted: true,
+      }
+    });
+  } catch (error: any) {
+    console.error('Admission skip error:', error);
+    res.status(500).json({ success: false, error: 'Failed to skip admission form' });
+  }
+});
+
 // Get admission form status
 router.get('/status', authenticate, async (req: any, res: any) => {
   try {

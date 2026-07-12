@@ -210,7 +210,7 @@ const MarketingTemplates: React.FC<MarketingTemplatesProps> = ({
 
       {/* Preview Modal */}
       {previewTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden shadow-2xl">
             {/* Preview Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">

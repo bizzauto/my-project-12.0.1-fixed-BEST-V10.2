@@ -6,7 +6,7 @@ import {
   TrendingUp, Headphones, Lock, AlertCircle, Loader2, Sparkles
 } from 'lucide-react';
 import { useAuthStore } from '../lib/authStore';
-import { subscriptionsAPI } from '../lib/api';
+import apiClient, { subscriptionsAPI } from '../lib/api';
 import { useToast } from './Toast';
 
 interface Plan {
@@ -122,7 +122,7 @@ const ResorPayBoard: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { user, business } = useAuthStore();
+  const { user, business, setAdmissionCompleted } = useAuthStore();
   const toast = useToast();
 
   const handleSelectPlan = async (planId: string) => {
@@ -442,8 +442,14 @@ const ResorPayBoard: React.FC = () => {
         {/* Skip Option */}
         <div className="text-center">
           <button
-            onClick={() => {
+            onClick={async () => {
+              try {
+                await apiClient.post('/admission/skip');
+              } catch {
+                /* ignore — local flag still set below */
+              }
               localStorage.setItem('admissionCompleted', 'true');
+              setAdmissionCompleted(true);
               navigate('/dashboard', { replace: true });
             }}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 text-sm font-medium"
