@@ -630,7 +630,7 @@ const SocialMediaPage: React.FC = () => {
       } else if (platform === 'twitter') {
         res = await socialAccountsAPI.disconnectTwitter();
       } else if (platform === 'google_business') {
-        window.location.href = '/app/google-business';
+        window.location.href = '/google-business';
         return;
       } else if (platform === 'youtube') {
         res = await socialAccountsAPI.disconnectYouTube();
@@ -789,7 +789,7 @@ const SocialMediaPage: React.FC = () => {
                           if (platform.id === 'instagram') {
                             setShowIgConnectModal(true);
                           } else if (platform.id === 'google_business') {
-                            window.location.href = '/app/google-business';
+                            window.location.href = '/google-business';
                           } else {
                             openConnectModal(platform.id);
                           }

@@ -185,13 +185,11 @@ export class GBPAutoPostService {
       let accessToken = decrypt(business.gbpAccessToken);
       if (business.gbpTokenExpiry && new Date(business.gbpTokenExpiry) <= new Date() && business.gbpRefreshToken) {
         try {
-          const refreshRes = await axios.post('https://oauth2.googleapis.com/token', null, {
-            params: {
-              client_id: process.env.GOOGLE_CLIENT_ID,
-              client_secret: process.env.GOOGLE_CLIENT_SECRET,
-              refresh_token: decrypt(business.gbpRefreshToken),
-              grant_type: 'refresh_token',
-            },
+          const refreshRes = await axios.post('https://oauth2.googleapis.com/token', {
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            refresh_token: decrypt(business.gbpRefreshToken),
+            grant_type: 'refresh_token',
           });
           accessToken = refreshRes.data.access_token;
           await prisma.business.update({
