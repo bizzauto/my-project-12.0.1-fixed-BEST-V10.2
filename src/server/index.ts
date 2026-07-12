@@ -188,22 +188,44 @@ if (NODE_ENV !== 'production') {
 // so that rate-limiter and req.ip use the real client IP from X-Forwarded-For
 app.set('trust proxy', 1);
 
+// Normalize an origin/URL to its hostname for scheme-agnostic comparison.
+// "https://bizzautoai.com" -> "bizzautoai.com"; "bizzautoai.com" -> "bizzautoai.com"
+function getCorsHost(value: string): string {
+  const v = value.trim().toLowerCase();
+  if (v.includes('://')) {
+    try { return new URL(v).host; } catch { /* fall through to raw */ }
+  }
+  return v.replace(/^\/+|\/+$/g, '');
+}
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, server-to-server, health checks)
     if (!origin) return callback(null, true);
 
     const raw = process.env.CORS_ORIGIN || '';
-    const allowedOrigins = raw
+    const allowed = raw
       ? raw.split(',').map(o => o.trim()).filter(Boolean)
       : [];
 
+    // Also allow the configured frontend/base URLs (handles http/https + www mismatch)
+    const extras = [process.env.FRONTEND_URL, process.env.BASE_URL]
+      .filter(Boolean)
+      .map(o => o.trim());
+
     // If CORS_ORIGIN is not set or contains '*', allow all origins
-    if (allowedOrigins.length === 0 || allowedOrigins.includes('*')) {
+    if (allowed.length === 0 || allowed.includes('*')) {
       return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin)) {
+    const originHost = getCorsHost(origin);
+    const isAllowed = [...allowed, ...extras].some(cfg => {
+      const cfgHost = getCorsHost(cfg);
+      if (!cfgHost) return false;
+      return cfgHost === originHost || originHost.endsWith('.' + cfgHost);
+    });
+
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.warn(`[CORS] Origin BLOCKED: ${origin}`);
