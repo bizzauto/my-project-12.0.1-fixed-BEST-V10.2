@@ -309,7 +309,7 @@ router.get('/status', authenticate, async (req: AuthRequest, res: Response) => {
       },
     });
 
-    const isConnected = !!(business?.gbpAccessToken && business?.gbpAccountId);
+    const isConnected = !!(business?.gbpAccessToken && business?.gbpAccountId); // fixed: was triple-negation (inverted)
 
     res.json({
       success: true,
