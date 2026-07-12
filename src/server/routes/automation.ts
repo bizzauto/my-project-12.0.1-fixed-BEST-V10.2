@@ -34,6 +34,23 @@ function getN8nBaseUrl(): string {
 // All routes require authentication
 router.use(authenticate);
 
+// ==================== WORKFLOW EXECUTION LOGS ====================
+// Execution logs for automation workflows (created by /deploy-template etc.)
+router.get('/logs', async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user.businessId;
+    const logs = await prisma.activity.findMany({
+      where: { businessId, type: { contains: 'workflow' } },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    res.json({ success: true, data: { logs } });
+  } catch (error: any) {
+    console.error('Automation logs error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch automation logs', details: error.message });
+  }
+});
+
 // ==================== AUTOMATION RULES ====================
 
 // Get all automation rules for business

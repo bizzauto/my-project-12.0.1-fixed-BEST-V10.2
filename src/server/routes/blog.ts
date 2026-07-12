@@ -31,6 +31,36 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+// ==================== ADMIN: STATS ====================
+// Blog stats (post/category/comment counts + total views)
+router.get('/stats', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user.businessId;
+    const [totalPosts, publishedPosts, draftPosts, totalCategories, totalComments, viewsAgg] = await Promise.all([
+      prisma.blogPost.count({ where: { businessId } }),
+      prisma.blogPost.count({ where: { businessId, status: 'published' } }),
+      prisma.blogPost.count({ where: { businessId, status: 'draft' } }),
+      prisma.blogCategory.count({ where: { businessId } }),
+      prisma.blogComment.count({ where: { businessId } }),
+      prisma.blogPost.aggregate({ where: { businessId }, _sum: { viewCount: true } }),
+    ]);
+    res.json({
+      success: true,
+      data: {
+        totalPosts,
+        publishedPosts,
+        draftPosts,
+        totalCategories,
+        totalComments,
+        totalViews: viewsAgg._sum.viewCount || 0,
+      },
+    });
+  } catch (error: any) {
+    console.error('Blog stats error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch blog stats', details: error.message });
+  }
+});
+
 // ==================== ADMIN: POSTS ====================
 
 // List posts (paginated, filterable by status/category)

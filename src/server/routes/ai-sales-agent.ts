@@ -492,127 +492,160 @@ router.post('/suggest', authenticate, async (req: AuthRequest, res: Response) =>
       return res.status(400).json({ success: false, error: 'contactId is required' });
     }
 
-    const contact = await prisma.contact.findFirst({
-      where: { id: contactId, businessId },
-    });
-
-    if (!contact) {
-      return res.status(404).json({ success: false, error: 'Contact not found' });
-    }
-
-    const [followUps, recentMessages] = await Promise.all([
-      prisma.aIFollowUp.findMany({
-        where: { businessId, contactId },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      }),
-      prisma.message.findMany({
-        where: { businessId, contactId },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      }),
-    ]);
-
-    const totalFollowUps = followUps.length;
-    const sentFollowUps = followUps.filter(f => f.status === 'sent').length;
-    const respondedFollowUps = followUps.filter(f => f.status === 'sent' && f.response).length;
-    const lastFollowUp = followUps[0];
-    const lastMessage = recentMessages[0];
-
-    let suggestedAction = 'follow_up';
-    let suggestedChannel = 'whatsapp';
-    let priority = 'medium';
-    let reasoning = '';
-
-    if (totalFollowUps === 0) {
-      suggestedAction = 'follow_up';
-      reasoning = 'No prior follow-ups. Initial outreach recommended.';
-      priority = 'high';
-    } else if (respondedFollowUps > 0) {
-      const lastResponse = followUps.find(f => f.response);
-      if (lastResponse && lastResponse.nextAction === 'close') {
-        suggestedAction = 'close';
-        reasoning = 'Contact has responded and deal is ready to close.';
-        priority = 'high';
-      } else if (lastResponse && lastResponse.nextAction === 'escalate') {
-        suggestedAction = 'escalate';
-        reasoning = 'Contact response indicates need for escalation.';
-        priority = 'high';
-      } else {
-        suggestedAction = 'follow_up';
-        reasoning = 'Contact has responded. Continue nurturing.';
-        priority = 'medium';
-      }
-    } else if (sentFollowUps >= 3) {
-      suggestedAction = 'escalate';
-      reasoning = `${sentFollowUps} follow-ups sent with no response. Consider escalating to manual outreach.`;
-      priority = 'high';
-    } else if (lastFollowUp && lastFollowUp.status === 'sent') {
-      const daysSinceLastFollowUp = Math.floor(
-        (Date.now() - lastFollowUp.sentAt!.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      if (daysSinceLastFollowUp >= 3) {
-        suggestedAction = 'follow_up';
-        reasoning = `${daysSinceLastFollowUp} days since last follow-up. Time for another touchpoint.`;
-        priority = 'medium';
-      } else {
-        suggestedAction = 'wait';
-        reasoning = `Last follow-up was ${daysSinceLastFollowUp} day(s) ago. Wait before next outreach.`;
-        priority = 'low';
-      }
-    } else {
-      suggestedAction = 'follow_up';
-      reasoning = 'Pending follow-ups exist. Monitor for responses.';
-      priority = 'medium';
-    }
-
-    if (contact.phone) suggestedChannel = 'whatsapp';
-    else if (contact.email) suggestedChannel = 'email';
-
-    const channelPerformance = followUps.reduce((acc: any, f) => {
-      if (!acc[f.channel]) acc[f.channel] = { sent: 0, responded: 0 };
-      if (f.status === 'sent') acc[f.channel].sent++;
-      if (f.status === 'sent' && f.response) acc[f.channel].responded++;
-      return acc;
-    }, {});
-
-    let bestChannel = suggestedChannel;
-    let bestResponseRate = 0;
-    for (const [ch, perf] of Object.entries(channelPerformance)) {
-      const p = perf as any;
-      if (p.sent > 0) {
-        const rate = p.responded / p.sent;
-        if (rate > bestResponseRate) {
-          bestResponseRate = rate;
-          bestChannel = ch;
-        }
-      }
-    }
-    if (bestResponseRate > 0) suggestedChannel = bestChannel;
-
-    res.json({
-      success: true,
-      data: {
-        contactId,
-        contactName: contact.name,
-        suggestedAction,
-        suggestedChannel,
-        priority,
-        reasoning,
-        stats: {
-          totalFollowUps,
-          sentFollowUps,
-          respondedFollowUps,
-          responseRate: sentFollowUps > 0 ? Math.round((respondedFollowUps / sentFollowUps) * 10000) / 100 : 0,
-        },
-        channelPerformance,
-      },
-    });
+    const data = await buildSuggestion(businessId, contactId);
+    res.json({ success: true, data });
   } catch (error: any) {
     console.error('AI suggest error:', error);
     res.status(500).json({ success: false, error: 'Failed to generate suggestion', details: error.message });
   }
 });
+
+/**
+ * POST /api/ai-sales/sales-assistant
+ * AI sales-assistant next-best-action recommendation for a contact (alias of /suggest).
+ */
+router.post('/sales-assistant', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user.businessId;
+    const { contactId } = req.body;
+
+    if (!contactId) {
+      return res.json({
+        success: true,
+        data: {
+          suggestedAction: 'follow_up',
+          suggestedChannel: 'whatsapp',
+          priority: 'medium',
+          reasoning: 'Select a contact to generate a personalized recommendation.',
+          stats: {},
+          channelPerformance: {},
+        },
+      });
+    }
+
+    const data = await buildSuggestion(businessId, contactId);
+    res.json({ success: true, data });
+  } catch (error: any) {
+    console.error('AI sales assistant error:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate assistant response', details: error.message });
+  }
+});
+
+async function buildSuggestion(businessId: string, contactId: string) {
+  const contact = await prisma.contact.findFirst({
+    where: { id: contactId, businessId },
+  });
+
+  if (!contact) {
+    throw new Error('Contact not found');
+  }
+
+  const [followUps, recentMessages] = await Promise.all([
+    prisma.aIFollowUp.findMany({
+      where: { businessId, contactId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    }),
+    prisma.message.findMany({
+      where: { businessId, contactId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    }),
+  ]);
+
+  const totalFollowUps = followUps.length;
+  const sentFollowUps = followUps.filter(f => f.status === 'sent').length;
+  const respondedFollowUps = followUps.filter(f => f.status === 'sent' && f.response).length;
+  const lastFollowUp = followUps[0];
+  const lastMessage = recentMessages[0];
+
+  let suggestedAction = 'follow_up';
+  let suggestedChannel = 'whatsapp';
+  let priority = 'medium';
+  let reasoning = '';
+
+  if (totalFollowUps === 0) {
+    suggestedAction = 'follow_up';
+    reasoning = 'No prior follow-ups. Initial outreach recommended.';
+    priority = 'high';
+  } else if (respondedFollowUps > 0) {
+    const lastResponse = followUps.find(f => f.response);
+    if (lastResponse && lastResponse.nextAction === 'close') {
+      suggestedAction = 'close';
+      reasoning = 'Contact has responded and deal is ready to close.';
+      priority = 'high';
+    } else if (lastResponse && lastResponse.nextAction === 'escalate') {
+      suggestedAction = 'escalate';
+      reasoning = 'Contact response indicates need for escalation.';
+      priority = 'high';
+    } else {
+      suggestedAction = 'follow_up';
+      reasoning = 'Contact has responded. Continue nurturing.';
+      priority = 'medium';
+    }
+  } else if (sentFollowUps >= 3) {
+    suggestedAction = 'escalate';
+    reasoning = `${sentFollowUps} follow-ups sent with no response. Consider escalating to manual outreach.`;
+    priority = 'high';
+  } else if (lastFollowUp && lastFollowUp.status === 'sent') {
+    const daysSinceLastFollowUp = Math.floor(
+      (Date.now() - lastFollowUp.sentAt!.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (daysSinceLastFollowUp >= 3) {
+      suggestedAction = 'follow_up';
+      reasoning = `${daysSinceLastFollowUp} days since last follow-up. Time for another touchpoint.`;
+      priority = 'medium';
+    } else {
+      suggestedAction = 'wait';
+      reasoning = `Last follow-up was ${daysSinceLastFollowUp} day(s) ago. Wait before next outreach.`;
+      priority = 'low';
+    }
+  } else {
+    suggestedAction = 'follow_up';
+    reasoning = 'Pending follow-ups exist. Monitor for responses.';
+    priority = 'medium';
+  }
+
+  if (contact.phone) suggestedChannel = 'whatsapp';
+  else if (contact.email) suggestedChannel = 'email';
+
+  const channelPerformance = followUps.reduce((acc: any, f) => {
+    if (!acc[f.channel]) acc[f.channel] = { sent: 0, responded: 0 };
+    if (f.status === 'sent') acc[f.channel].sent++;
+    if (f.status === 'sent' && f.response) acc[f.channel].responded++;
+    return acc;
+  }, {});
+
+  let bestChannel = suggestedChannel;
+  let bestResponseRate = 0;
+  for (const [ch, perf] of Object.entries(channelPerformance)) {
+    const p = perf as any;
+    if (p.sent > 0) {
+      const rate = p.responded / p.sent;
+      if (rate > bestResponseRate) {
+        bestResponseRate = rate;
+        bestChannel = ch;
+      }
+    }
+  }
+  if (bestResponseRate > 0) suggestedChannel = bestChannel;
+
+  return {
+    contactId,
+    contactName: contact.name,
+    suggestedAction,
+    suggestedChannel,
+    priority,
+    reasoning,
+    stats: {
+      totalFollowUps,
+      sentFollowUps,
+      respondedFollowUps,
+      responseRate: sentFollowUps > 0 ? Math.round((respondedFollowUps / sentFollowUps) * 10000) / 100 : 0,
+    },
+    channelPerformance,
+  };
+}
 
 function generateDefaultMessage(triggerType: string, contact: any): string {
   const name = contact.name || 'there';

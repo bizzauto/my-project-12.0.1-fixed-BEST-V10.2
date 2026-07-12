@@ -268,6 +268,85 @@ router.post('/gst-reconciliation', authenticate, async (req: AuthRequest, res: a
   }
 });
 
+/**
+ * POST /api/ca-copilot/compare
+ * Compare books vs GST returns (alias of /gst-reconciliation).
+ */
+router.post('/compare', authenticate, async (req: AuthRequest, res: any) => {
+  try {
+    const businessId = req.user.businessId;
+    const { period, gstReturns } = req.body;
+    const data = await reconcileGst(businessId, period, gstReturns);
+    res.json({ success: true, data });
+  } catch (error: any) {
+    console.error('CA compare error:', error);
+    res.status(500).json({ success: false, error: 'Comparison failed', details: error.message });
+  }
+});
+
+async function reconcileGst(businessId: string, period: any, gstReturns: any) {
+  const startDate = period?.start ? new Date(period.start) : new Date(new Date().setMonth(new Date().getMonth() - 3));
+  const endDate = period?.end ? new Date(period.end) : new Date();
+
+  const invoices = await prisma.invoice.findMany({
+    where: { businessId, createdAt: { gte: startDate, lte: endDate } },
+  } as any);
+
+  const totalSales = invoices.reduce((sum: any, i: any) => sum + (i.amount || 0), 0);
+  const totalTaxCollected = invoices.reduce((sum: any, i: any) => sum + ((i.amount || 0) * 0.18), 0);
+  const cgst = totalSales * 0.09;
+  const sgst = totalSales * 0.09;
+  const igst = totalSales * 0.18;
+
+  const bookData = {
+    totalSales,
+    totalInvoices: invoices.length,
+    cgst: Math.round(cgst * 100) / 100,
+    sgst: Math.round(sgst * 100) / 100,
+    igst: Math.round(igst * 100) / 100,
+    totalTax: Math.round(totalTaxCollected * 100) / 100
+  };
+
+  const discrepancies: any[] = [];
+  const recommendations: string[] = [];
+
+  if (gstReturns && gstReturns.totalSales) {
+    if (Math.abs((gstReturns.totalSales || 0) - bookData.totalSales) > 1) {
+      const diff = bookData.totalSales - (gstReturns.totalSales || 0);
+      discrepancies.push({ field: 'Total Sales', bookValue: bookData.totalSales, returnValue: gstReturns.totalSales, difference: diff, severity: Math.abs(diff) > 10000 ? 'HIGH' : 'MEDIUM' });
+    }
+    if (Math.abs((gstReturns.cgst || 0) - bookData.cgst) > 1) {
+      discrepancies.push({ field: 'CGST', bookValue: bookData.cgst, returnValue: gstReturns.cgst, difference: bookData.cgst - (gstReturns.cgst || 0), severity: 'MEDIUM' });
+    }
+    if (Math.abs((gstReturns.sgst || 0) - bookData.sgst) > 1) {
+      discrepancies.push({ field: 'SGST', bookValue: bookData.sgst, returnValue: gstReturns.sgst, difference: bookData.sgst - (gstReturns.sgst || 0), severity: 'MEDIUM' });
+    }
+    if (gstReturns.igst && Math.abs(gstReturns.igst - bookData.igst) > 1) {
+      discrepancies.push({ field: 'IGST', bookValue: bookData.igst, returnValue: gstReturns.igst, difference: bookData.igst - gstReturns.igst, severity: 'MEDIUM' });
+    }
+  }
+
+  if (discrepancies.length > 0) {
+    recommendations.push('Tax rate discrepancies found. Verify HSN codes and applicable rates.');
+    recommendations.push('Recheck tax calculations before filing returns.');
+  }
+  if (!gstReturns || Object.values(gstReturns).every((v: any) => !v)) {
+    recommendations.push('Enter GST return data to compare against books.');
+  }
+  if (recommendations.length === 0) {
+    recommendations.push('GST reconciliation complete. All records match.');
+  }
+
+  return {
+    bookData,
+    gstReturns: gstReturns || null,
+    discrepancies,
+    isReconciled: discrepancies.length === 0 && gstReturns,
+    period: { start: startDate, end: endDate },
+    recommendations
+  };
+}
+
 // ============================================================
 // LEDGER SCRUTINY - AI-powered like Python engine
 // ============================================================

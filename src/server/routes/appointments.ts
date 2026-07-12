@@ -329,4 +329,54 @@ router.patch('/:id/complete', authenticate, async (req: AuthRequest, res: Respon
   }
 });
 
+// ==================== SERVICES & SETTINGS ====================
+// Distinct list of appointment services
+router.get('/services', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user.businessId;
+    const result = await prisma.appointment.findMany({
+      where: { businessId },
+      select: { service: true },
+      distinct: ['service'],
+      orderBy: { service: 'asc' },
+    });
+    const services = result.map((a: any) => a.service).filter((s: any) => s);
+    res.json({ success: true, data: { services } });
+  } catch (error: any) {
+    console.error('Appointment services error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch services', details: error.message });
+  }
+});
+
+// Get appointment settings (stored on business.businessHours)
+router.get('/settings', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user.businessId;
+    const business = await prisma.business.findUnique({
+      where: { id: businessId },
+      select: { businessHours: true },
+    });
+    res.json({ success: true, data: { businessHours: business?.businessHours ?? null } });
+  } catch (error: any) {
+    console.error('Appointment settings error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch appointment settings', details: error.message });
+  }
+});
+
+// Update appointment settings
+router.put('/settings', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user.businessId;
+    const { businessHours } = req.body;
+    const updated = await prisma.business.update({
+      where: { id: businessId },
+      data: { businessHours: businessHours ?? undefined },
+    });
+    res.json({ success: true, data: { businessHours: updated.businessHours } });
+  } catch (error: any) {
+    console.error('Appointment settings update error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update appointment settings', details: error.message });
+  }
+});
+
 export default router;

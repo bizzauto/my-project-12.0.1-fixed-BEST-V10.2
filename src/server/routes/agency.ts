@@ -625,4 +625,92 @@ router.put('/branding', async (req: any, res: any) => {
   }
 });
 
+// ==================== BRANDING (GET) ====================
+// Get agency branding for the current owner
+router.get('/branding', async (req: any, res: any) => {
+  try {
+    const agency = await prisma.agency.findFirst({
+      where: { ownerId: req.user.id },
+    });
+
+    if (!agency) {
+      return res.status(404).json({
+        success: false,
+        error: 'No agency found for this user',
+      });
+    }
+
+    res.json({ success: true, data: { branding: agency.branding ?? null } });
+  } catch (error: any) {
+    console.error('Get agency branding error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch agency branding',
+      details: error.message,
+    });
+  }
+});
+
+// ==================== WHITE-LABEL ====================
+// Get white-label config (stored inside agency.branding.whiteLabel)
+router.get('/white-label', async (req: any, res: any) => {
+  try {
+    const agency = await prisma.agency.findFirst({
+      where: { ownerId: req.user.id },
+    });
+
+    if (!agency) {
+      return res.status(404).json({
+        success: false,
+        error: 'No agency found for this user',
+      });
+    }
+
+    const branding = (agency.branding as Record<string, any>) || {};
+    res.json({ success: true, data: { whiteLabel: branding.whiteLabel ?? null } });
+  } catch (error: any) {
+    console.error('Get white-label error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch white-label config',
+      details: error.message,
+    });
+  }
+});
+
+// Update white-label config
+router.put('/white-label', async (req: any, res: any) => {
+  try {
+    const agency = await prisma.agency.findFirst({
+      where: { ownerId: req.user.id },
+    });
+
+    if (!agency) {
+      return res.status(404).json({
+        success: false,
+        error: 'No agency found for this user',
+      });
+    }
+
+    const { whiteLabel } = req.body;
+    const currentBranding = (agency.branding as Record<string, any>) || {};
+    const updatedBranding = { ...currentBranding, whiteLabel: whiteLabel ?? currentBranding.whiteLabel };
+
+    const updated = await prisma.agency.update({
+      where: { id: agency.id },
+      data: { branding: updatedBranding },
+    });
+
+    const branding = (updated.branding as Record<string, any>) || {};
+    res.json({ success: true, data: { whiteLabel: branding.whiteLabel ?? null } });
+  } catch (error: any) {
+    console.error('Update white-label error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update white-label config',
+      details: error.message,
+    });
+  }
+});
+
 export default router;
