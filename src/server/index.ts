@@ -670,10 +670,13 @@ app.use((req, res) => {
 
 // Graceful shutdown
 process.on('unhandledRejection', (reason: any) => {
-  console.error('UNHANDLED REJECTION:', reason);
+  // A single rejected promise (e.g. a response sent after the client
+  // disconnected / request timed out, or a stray res.json) must NOT take
+  // down the whole server. That caused a crash loop and site-wide 502s.
+  // Log it and keep serving — the offending request already failed.
+  console.error('UNHANDLED REJECTION (non-fatal, server continues):', reason);
   console.error('Stack:', reason?.stack);
   logger.error('Unhandled Rejection:', reason);
-  setTimeout(() => process.exit(1), 5000);
 });
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

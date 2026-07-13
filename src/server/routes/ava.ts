@@ -11,6 +11,14 @@ const n8nHttpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 const router = Router();
 
+// Guard against sending a response twice (e.g. after the client has
+// disconnected / the request timed out). Prevents ERR_HTTP_HEADERS_SENT
+// from bubbling up as an unhandled rejection that crashes the server.
+function safeJson(res: Response, status: number, body: any): void {
+  if (res.headersSent || res.writableEnded) return;
+  res.status(status).json(body);
+}
+
 // Rate limiter for Ava chat — prevent credit exhaustion
 const avaChatRateLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -193,7 +201,7 @@ RULES:
       responseText = 'I apologize, but I\'m experiencing a temporary connectivity issue. Please try again in a moment. In the meantime, you can check your dashboard for the latest business metrics.';
     }
 
-    res.json({
+    safeJson(res, 200, {
       success: true,
       data: {
         text: responseText,
@@ -203,7 +211,7 @@ RULES:
     });
   } catch (error: any) {
     console.error('Ava chat error:', error);
-    res.status(500).json({
+    safeJson(res, 500, {
       success: false,
       error: 'Chat failed',
       details: error.message
