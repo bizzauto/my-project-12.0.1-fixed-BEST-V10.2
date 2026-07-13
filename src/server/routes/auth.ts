@@ -555,6 +555,17 @@ router.post('/google', socialAuthLimiter, async (req: Request, res: Response) =>
         });
       }
 
+      // Google has already verified the email — stamp emailVerified so the
+      // `authenticate` middleware does not 403 MEMBER users on /auth/me,
+      // which would otherwise wipe the session on every page load.
+      if (!user.emailVerified) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { emailVerified: new Date() },
+          include: { business: true },
+        });
+      }
+
       // Update profile picture if not set
       if (picture && !user.image) {
         await prisma.user.update({
