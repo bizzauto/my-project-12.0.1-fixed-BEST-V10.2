@@ -160,6 +160,18 @@ export const authenticate = async (
       role: user.role,
     };
 
+    // SUPER_ADMIN may have no business (platform-level access).
+    // Non-admin users MUST have a business linked, otherwise every
+    // business-scoped query (dashboard, analytics, CRM) returns empty
+    // or 500s. Fail fast with a clear error instead of silent breakage.
+    if (user.role !== 'SUPER_ADMIN' && !user.businessId) {
+      return res.status(403).json({
+        success: false,
+        error: 'No business associated with your account. Please contact support.',
+        code: 'NO_BUSINESS',
+      });
+    }
+
     next();
   } catch (error: any) {
     if (error.name === 'JsonWebTokenError') {

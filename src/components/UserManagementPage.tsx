@@ -25,7 +25,7 @@ const ROLES = [
 
 export default function UserManagementPage() {
   const toast = useToast();
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser, getProfile, setUser } = useAuthStore();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -59,6 +59,13 @@ export default function UserManagementPage() {
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
         setEditingRole(null);
         toast.success(`Role changed to ${role}`);
+        // If admin changed their OWN role, refresh current user so route guards update
+        if (userId === currentUser?.id) {
+          try {
+            const prof = await getProfile();
+            if (prof.data?.data?.user) setUser(prof.data.data.user);
+          } catch { /* non-fatal */ }
+        }
       } else { toast.error(data.error); }
     } catch { toast.error('Failed to change role'); }
     finally { setSaving(false); }

@@ -62,6 +62,7 @@ interface AuthState {
   setOnboardingCompleted: (val: boolean) => void;
   setAdmissionCompleted: (val: boolean) => void;
   setUser: (user: User) => void;
+  getProfile: () => Promise<any>;
   setTokens: (token: string, refreshToken: string) => void;
 }
 
@@ -188,6 +189,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('admissionCompleted', String(admissionCompleted));
       set({ user, business, token, isAuthenticated: true, isLoading: false, onboardingCompleted, admissionCompleted });
       if (debug) debug.storeStep = 'state_updated_isAuthenticated_true';
+      // Sync role from server truth (login response may be stale)
+      try {
+        const prof = await authAPI.getProfile();
+        if (prof.data?.data?.user) {
+          set({ user: { ...user, ...prof.data.data.user } });
+        }
+      } catch { /* non-fatal */ }
     } catch (error: any) {
       set({ isLoading: false });
       if (debug) { debug.storeStep = 'store_error'; debug.storeError = error?.response?.data || error?.message || String(error); }
@@ -208,6 +216,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('onboardingCompleted', String(onboardingCompleted));
       localStorage.setItem('admissionCompleted', String(admissionCompleted));
       set({ user, business, token, isAuthenticated: true, isLoading: false, onboardingCompleted, admissionCompleted });
+      try {
+        const prof = await authAPI.getProfile();
+        if (prof.data?.data?.user) {
+          set({ user: { ...user, ...prof.data.data.user } });
+        }
+      } catch { /* non-fatal */ }
     } catch (error: any) {
       set({ isLoading: false });
       const message = error.response?.data?.error || error.response?.data?.message || 'Google sign-in failed';
@@ -227,6 +241,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('onboardingCompleted', String(onboardingCompleted));
       localStorage.setItem('admissionCompleted', String(admissionCompleted));
       set({ user, business, token, isAuthenticated: true, isLoading: false, onboardingCompleted, admissionCompleted });
+      try {
+        const prof = await authAPI.getProfile();
+        if (prof.data?.data?.user) {
+          set({ user: { ...user, ...prof.data.data.user } });
+        }
+      } catch { /* non-fatal */ }
     } catch (error: any) {
       set({ isLoading: false });
       const message = error.response?.data?.error || error.response?.data?.message || 'Apple sign-in failed';
@@ -243,6 +263,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('onboardingCompleted', 'true');
       set({ user, business, token, isAuthenticated: true, isLoading: false, onboardingCompleted: true });
+      try {
+        const prof = await authAPI.getProfile();
+        if (prof.data?.data?.user) {
+          set({ user: { ...user, ...prof.data.data.user } });
+        }
+      } catch { /* non-fatal */ }
     } catch (error: any) {
       set({ isLoading: false });
       const reqUrl = error.config?.baseURL + error.config?.url || '';
@@ -342,6 +368,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setUser: (user) => {
     set({ user, isAuthenticated: true });
+  },
+
+  getProfile: async () => {
+    const res = await authAPI.getProfile();
+    if (res.data?.data?.user) set({ user: res.data.data.user });
+    return res;
   },
 
   setTokens: (token, refreshToken) => {

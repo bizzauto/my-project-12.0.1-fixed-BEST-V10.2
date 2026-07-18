@@ -431,6 +431,14 @@ router.put('/users/:id/role', async (req: any, res: any) => {
       });
     }
 
+    // Prevent a SUPER_ADMIN from demoting themselves (locks out platform admin)
+    if (req.user.id === req.params.id && role !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        success: false,
+        error: 'You cannot change your own SUPER_ADMIN role.',
+      });
+    }
+
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { role },
