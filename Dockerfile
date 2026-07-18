@@ -16,7 +16,7 @@ RUN npm ci --no-audit --no-fund --loglevel error && npx prisma generate 2>&1 | t
 COPY . .
 
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN rm -rf dist && npm run build:docker 2>&1 | grep -v "^dist/client/assets/" | grep -v "✓ built in" && find dist -name "*.map" -delete
+RUN rm -rf dist && npm run build:docker && find dist -name "*.map" -delete
 
 FROM node:22-alpine
 
@@ -49,4 +49,7 @@ USER appuser
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:${PORT:-4000}/health || exit 1
 
-CMD ["./start.sh"]
+# Ensure DB schema is in sync before the server starts. This creates any missing
+# tables (e.g. AuditLog) that `migrate deploy` may have skipped due to drift.
+# Runs regardless of start.sh being used or bypassed by the orchestrator.
+CMD npx prisma db push --skip-generate --accept-data-loss && ./start.sh

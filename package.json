@@ -13,7 +13,7 @@
     "lint": "tsc --noEmit || true",
     "lint:fix": "tsc --noEmit || true",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json",
-    "start": "npx prisma generate && (npx prisma migrate resolve --applied 20260624_init 2>/dev/null; npx prisma migrate deploy 2>/dev/null; echo '🔧 Ensuring schema is in sync (creates any missing tables)...'; npx prisma db push --skip-generate 2>&1 | tail -5) && node dist/server/index.js",
+    "start": "npx prisma generate && (npx prisma migrate resolve --applied 20260624_init 2>/dev/null; npx prisma migrate deploy 2>/dev/null || true) && (npx prisma db push --accept-data-loss 2>&1 | tail -5 || echo '⚠️ db push failed — resolve schema drift manually in the deploy environment') && node dist/server/index.js",
     "server": "tsx watch src/server/index.ts",
     "server:prod": "npm run start",
     "worker": "tsx watch src/server/worker.ts",

@@ -253,6 +253,19 @@ async function runPruneCycle(): Promise<void> {
   const startTime = Date.now();
 
   try {
+    // Guard: if the AuditLog table doesn't exist yet (schema drift / first boot),
+    // skip pruning instead of crashing the cycle. The schema-drift-guard repairs
+    // missing tables at startup; once present, the next cycle will prune normally.
+    try {
+      await prisma.$queryRawUnsafe(`SELECT 1 FROM "AuditLog" LIMIT 1`);
+    } catch (tableErr: any) {
+      if (/does not exist|relation/i.test(String(tableErr?.message || tableErr))) {
+        console.warn('[AuditPrune] AuditLog table not found — skipping prune cycle (schema repair may be pending).');
+        return;
+      }
+      // Other errors (e.g. DB connection) — fall through to the prune attempt below.
+    }
+
     const result = await pruneAuditLogs({
       retentionDays: DEFAULT_RETENTION_DAYS,
       batchSize: BATCH_SIZE,
