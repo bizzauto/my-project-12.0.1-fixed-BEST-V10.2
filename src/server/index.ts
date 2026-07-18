@@ -696,14 +696,10 @@ startSlowQueryLogger();
 
 // Repair schema drift (missing critical tables) BEFORE any cron/health check
 // touches them. Runs once at boot; idempotent and non-fatal.
-// NOTE: AuditLog repair temporarily disabled (table missing + db push not applied).
-// Re-enable once the schema is synced.
 await ensureSchema();
 
-// Start audit log auto-prune cron
-// TEMPORARILY DISABLED: AuditLog table missing causes prune cycle to throw
-// "relation does not exist" and destabilize startup. Re-enable after schema sync.
-// startAuditPruneCron();
+// Start audit log auto-prune cron (AuditLog table is now ensured at boot)
+startAuditPruneCron();
 
 // Start server
 console.log(`Starting server on ${HOST}:${PORT} in ${NODE_ENV} mode`);

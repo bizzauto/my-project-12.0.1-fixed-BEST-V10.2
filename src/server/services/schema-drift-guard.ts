@@ -26,12 +26,8 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
  * DDL is derived from the canonical prisma/migrations SQL so it stays faithful
  * to the intended schema. Add new critical tables here as the schema grows.
  */
-// TEMPORARILY DISABLED: AuditLog table is missing from the database and
-// `prisma db push` is not being applied at boot (orchestrator bypasses start.sh).
-// Repairing it at runtime causes the AuditPrune cron to throw "relation does not exist"
-// and destabilize startup. Re-enable this entry once the schema is synced via `prisma db push`.
 const CRITICAL_TABLES: Record<string, string[]> = {
-  // AuditLog: [
+  AuditLog: [
     `CREATE TABLE IF NOT EXISTS "AuditLog" (
       "id" TEXT NOT NULL,
       "businessId" TEXT NOT NULL,
