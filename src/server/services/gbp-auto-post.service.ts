@@ -1,5 +1,6 @@
 import { prisma } from '../db.js';
 import { encrypt, decrypt } from '../utils/auth.js';
+import { exchangeGoogleToken } from './google-oauth.service.js';
 
 export interface GBPAutoPostTemplate {
   id: string;
@@ -185,9 +186,9 @@ export class GBPAutoPostService {
       let accessToken = decrypt(business.gbpAccessToken);
       if (business.gbpTokenExpiry && new Date(business.gbpTokenExpiry) <= new Date() && business.gbpRefreshToken) {
         try {
-          const refreshRes = await axios.post('https://oauth2.googleapis.com/token', {
-            client_id: process.env.GOOGLE_CLIENT_ID,
-            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          const refreshRes = await exchangeGoogleToken({
+            client_id: process.env.GOOGLE_CLIENT_ID!,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET!,
             refresh_token: decrypt(business.gbpRefreshToken),
             grant_type: 'refresh_token',
           });

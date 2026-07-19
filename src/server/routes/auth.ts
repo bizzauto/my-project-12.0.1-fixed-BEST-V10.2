@@ -14,6 +14,7 @@ import { registerSchema, loginSchema, changePasswordSchema } from '../validation
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import { revokeAllUserTokens } from '../services/token-blacklist.service.js';
+import { exchangeGoogleToken } from '../services/google-oauth.service.js';
 import { recordFailedLoginAttempt, clearFailedLoginAttempts, getLockoutStatus } from '../services/account-lockout.service.js';
 
 const router = Router();
@@ -168,7 +169,7 @@ router.get('/google/callback', async (req: Request, res: Response) => {
 
   try {
     const { code } = req.query;
-    if (!code) {
+    if (!code || typeof code !== 'string') {
       return res.redirect(`${frontendUrl}/login?error=no_code`);
     }
 
@@ -176,22 +177,23 @@ router.get('/google/callback', async (req: Request, res: Response) => {
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = process.env.GOOGLE_AUTH_REDIRECT_URL || `https://bizzautoai.com/api/auth/google/callback`;
 
-    // Exchange code for tokens
-    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // Exchange code for tokens (with retry/timeout on transient network failures)
+    let tokenData: any;
+    try {
+      tokenData = await exchangeGoogleToken({
         code,
-        client_id: clientId,
-        client_secret: clientSecret,
+        client_id: clientId!,
+        client_secret: clientSecret!,
         redirect_uri: redirectUri,
         grant_type: 'authorization_code',
-      }),
-    });
+      });
+    } catch (tokenErr: any) {
+      console.error('Google token exchange failed:', tokenErr?.message || tokenErr);
+      return res.redirect(`${frontendUrl}/login?error=token_exchange_failed`);
+    }
 
-    const tokenData: any = await tokenRes.json();
     if (!tokenData.id_token) {
-      console.error('Google token exchange failed:', tokenData);
+      console.error('Google token exchange returned no id_token:', tokenData);
       return res.redirect(`${frontendUrl}/login?error=token_exchange_failed`);
     }
 

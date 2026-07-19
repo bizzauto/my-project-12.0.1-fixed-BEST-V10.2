@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { prisma } from '../db.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { GBPAutoPostService } from '../services/gbp-auto-post.service.js';
+import { exchangeGoogleToken } from '../services/google-oauth.service.js';
 import { encrypt, decrypt } from '../utils/auth.js';
 import axios from 'axios';
 
@@ -31,9 +32,9 @@ async function refreshGBPToken(businessId: string): Promise<string | null> {
     // Token expired or about to expire — refresh it
     console.log('[GBP] Refreshing expired access token for business:', businessId);
     const refreshToken = decrypt(business.gbpRefreshToken);
-    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    const tokenResponse = await exchangeGoogleToken({
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
     });
@@ -138,11 +139,11 @@ router.get('/auth/callback', async (req: AuthRequest, res: Response) => {
     }
     oauthStates.delete(state as string);
 
-    // Exchange code for tokens
-    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
-      code,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    // Exchange code for tokens (with retry/timeout on transient network failures)
+    const tokenResponse = await exchangeGoogleToken({
+      code: code as string,
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
       redirect_uri: process.env.GOOGLE_BUSINESS_REDIRECT_URL || `https://bizzautoai.com/api/google-business/auth/callback`,
       grant_type: 'authorization_code',
     });
