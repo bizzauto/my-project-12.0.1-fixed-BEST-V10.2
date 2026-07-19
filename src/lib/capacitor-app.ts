@@ -121,6 +121,42 @@ export const MobileApp = {
       right: parseInt(style.getPropertyValue('--sar') || '0'),
     };
   },
+
+  // Haptic feedback (no-op on web, uses Capacitor Haptics on native)
+  async hapticLight() {
+    if (!isNative) return;
+    try {
+      const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch { /* plugin not available */ }
+  },
+
+  async hapticMedium() {
+    if (!isNative) return;
+    try {
+      const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+      await Haptics.impact({ style: ImpactStyle.Medium });
+    } catch { /* plugin not available */ }
+  },
+
+  async hapticSuccess() {
+    if (!isNative) return;
+    try {
+      const { Haptics, NotificationType } = await import('@capacitor/haptics');
+      await Haptics.notification({ type: NotificationType.Success });
+    } catch { /* plugin not available */ }
+  },
+
+  // App info for update prompts / version display
+  async getAppInfo() {
+    return {
+      name: 'BizzAuto',
+      version: (import.meta as any).env?.VITE_APP_VERSION || '1.0.0',
+      build: (import.meta as any).env?.VITE_APP_BUILD || '0',
+      isNative,
+      platform,
+    };
+  },
 };
 
 // Export for easy import
