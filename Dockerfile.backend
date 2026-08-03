@@ -1,0 +1,28 @@
+# Backend Dockerfile - Express Server
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npx tsc --noEmit 2>/dev/null || true
+
+FROM node:20-alpine
+WORKDIR /app
+RUN apk add --no-cache openssl
+
+# Copy built dependencies
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/src/server ./src/server
+COPY --from=builder /app/tsconfig.json ./
+
+# Generate Prisma client
+RUN npx prisma generate
+
+EXPOSE 4000
+
+ENV NODE_ENV=production
+ENV PORT=4000
+
+CMD ["npx", "tsx", "src/server/index.ts"]

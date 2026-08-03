@@ -308,16 +308,17 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       )}
 
       {/* ===== SIDEBAR ===== */}
-      {/* Mobile: completely hidden */}
+      {/* Mobile: hidden via CSS md: breakpoint */}
       {/* Tablet (md-lg): slide-out drawer with w-72 (fixed position) */}
-      {/* Desktop (lg+): always visible, collapsible w-64/w-20 (flex item, not fixed) */}
+      {/* Desktop (lg+): always visible via CSS, collapsible w-64/w-20 */}
       <div
         className={`shell-sidebar flex-col transition-all duration-300 ${
           isPremium ? 'dp-sidebar' : ''
         } ${
-          isMobile ? 'hidden' :
-          isTablet ? `fixed left-0 top-0 z-50 ${sidebarOpen ? 'flex w-72 shadow-2xl' : 'hidden'}` :
-          `flex flex-shrink-0 ${collapsed ? 'w-20' : 'w-64'}`
+          // Mobile: always hidden via CSS. Tablet: JS-controlled slide-out. Desktop: CSS ensures visibility.
+          isTablet && sidebarOpen
+            ? 'fixed left-0 top-0 z-50 flex w-72 shadow-2xl'
+            : `hidden md:hidden lg:flex lg:flex-shrink-0 ${collapsed ? 'lg:w-20' : 'lg:w-64'}`
         }`}
         style={{ height: '100dvh', maxHeight: '100dvh', overflow: 'hidden' }}
       >
@@ -514,9 +515,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       {/* ===== MAIN CONTENT AREA ===== */}
       {/* On desktop, sidebar is a flex item so no margin needed — flex-1 handles sizing */}
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
-        isMobile ? 'ml-0' :
-        isTablet ? (sidebarOpen ? 'ml-72' : 'ml-0') :
-        ''
+        // Mobile: no margin. Tablet: JS-controlled margin. Desktop: CSS handles it via flex.
+        isTablet && sidebarOpen ? 'ml-72' : ''
       }`}>
         {/* ===== MOBILE TOP BAR (visible only on mobile) =====
             Solid bg (no backdrop-blur) — kills Android scroll perf. */}
