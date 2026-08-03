@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tell Tailwind v4 which files to scan for utility classes */
+@source "./**/*.{tsx,ts,jsx,js}";
+
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
