@@ -95,9 +95,9 @@ export function printEnvironmentReport(result: EnvironmentValidationResult): voi
   }
 
   if (nodeEnv === 'production' && !result.valid) {
-    console.log('\n⚠️ WARNING: Security issues found in production — proceeding with warnings.');
-    console.log('   Fix these before going live to production!');
-    // Don't crash - just warn. Let the app start so you can debug.
-    // process.exit(1);
+    console.error('\n🚨 FATAL: Security issues found in production — refusing to start.');
+    console.error('   Missing or invalid env vars will cause auth failures and data loss.');
+    console.error('   Fix the issues above, then restart the server.');
+    process.exit(1);
   }
 }

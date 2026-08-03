@@ -219,7 +219,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const onboardingCompleted = user.onboardingCompleted ?? false;
       const admissionCompleted = user.admissionCompleted ?? false;
       localStorage.setItem('token', token);
-      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      // Always store refresh token to enable session recovery
+      localStorage.setItem('refreshToken', refreshToken || '');
       localStorage.setItem('onboardingCompleted', String(onboardingCompleted));
       localStorage.setItem('admissionCompleted', String(admissionCompleted));
       set({ user, business, token, isAuthenticated: true, isLoading: false, onboardingCompleted, admissionCompleted });
@@ -247,7 +248,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const onboardingCompleted = user.onboardingCompleted ?? false;
       const admissionCompleted = user.admissionCompleted ?? false;
       localStorage.setItem('token', token);
-      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      // Always store refresh token to enable session recovery
+      localStorage.setItem('refreshToken', refreshToken || '');
       localStorage.setItem('onboardingCompleted', String(onboardingCompleted));
       localStorage.setItem('admissionCompleted', String(admissionCompleted));
       set({ user, business, token, isAuthenticated: true, isLoading: false, onboardingCompleted, admissionCompleted });
@@ -272,7 +274,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const onboardingCompleted = user.onboardingCompleted ?? false;
       const admissionCompleted = user.admissionCompleted ?? false;
       localStorage.setItem('token', token);
-      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      // Always store refresh token to enable session recovery
+      localStorage.setItem('refreshToken', refreshToken || '');
       localStorage.setItem('onboardingCompleted', String(onboardingCompleted));
       localStorage.setItem('admissionCompleted', String(admissionCompleted));
       set({ user, business, token, isAuthenticated: true, isLoading: false, onboardingCompleted, admissionCompleted });

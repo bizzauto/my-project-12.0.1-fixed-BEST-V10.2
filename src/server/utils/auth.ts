@@ -24,9 +24,17 @@ export function getJwtSecret(): string {
     }
     return secret;
   }
+  // CRITICAL: In production, JWT_SECRET MUST be set.
+  // Without it, every server restart generates a new random secret,
+  // invalidating ALL existing user tokens → "Unauthorized" errors.
   if (isProd()) {
-    console.warn('⚠️ WARNING: JWT_SECRET not set — using random dev fallback. Set JWT_SECRET in .env for production!');
+    throw new Error(
+      'FATAL: JWT_SECRET environment variable is not set. ' +
+      'All user sessions will break on server restart. ' +
+      'Set JWT_SECRET to a strong, persistent value (min 32 chars) in your .env or Coolify environment.'
+    );
   }
+  console.warn('⚠️ WARNING: JWT_SECRET not set — using random dev fallback. Set JWT_SECRET in .env for production!');
   return DEV_JWT_FALLBACK;
 }
 
