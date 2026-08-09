@@ -34,6 +34,7 @@ export const authRateLimiter = rateLimit({
 /**
  * Login Specific Rate Limiter - Very strict
  * 5 failed attempts per 30 minutes
+ * IPs listed in LOGIN_RATE_LIMIT_BYPASS_IPS (comma-separated) are exempt.
  */
 export const loginRateLimiter = rateLimit({
   windowMs: 30 * 60 * 1000,
@@ -42,6 +43,11 @@ export const loginRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   validate: false,
+  skip: (req) => {
+    const bypassIps = (process.env.LOGIN_RATE_LIMIT_BYPASS_IPS || '')
+      .split(',').map((s) => s.trim()).filter(Boolean);
+    return bypassIps.includes(req.ip || '');
+  },
 });
 
 /**

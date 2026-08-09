@@ -331,7 +331,7 @@ const allProductFeatures: { category: string; items: string[] }[] = [
     category: 'Integrations',
     items: [
       'Razorpay Payments',
-      'Wave Accounting',
+      'BizzBills (Billing & Invoicing)',
       'PostHog Analytics',
       'Google Analytics',
       'Facebook Pixel',

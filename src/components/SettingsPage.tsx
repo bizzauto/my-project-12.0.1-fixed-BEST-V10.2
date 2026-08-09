@@ -314,15 +314,6 @@ export default function SettingsPage() {
                 Open Full White-Label Settings
                 <ArrowRight size={14} />
               </button>
-              <button
-                type="button"
-                onClick={() => navigate('/settings/wave')}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all text-sm font-medium shadow-lg shadow-blue-500/25"
-              >
-                <ExternalLink size={14} />
-                Wave Accounting Settings
-                <ArrowRight size={14} />
-              </button>
             </div>
           </div>
 

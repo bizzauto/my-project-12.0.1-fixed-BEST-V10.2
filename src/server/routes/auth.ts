@@ -28,6 +28,14 @@ const loginLimiter = rateLimit({
   message: { success: false, error: 'Too many login attempts. Please try again after a minute.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    const bypassIps = (process.env.LOGIN_RATE_LIMIT_BYPASS_IPS || '')
+      .split(',').map((s) => s.trim()).filter(Boolean);
+    if (!bypassIps.length) return false;
+    const ips = [req.ip, req.socket?.remoteAddress, (req.headers['x-forwarded-for'] as string) || '']
+      .join(',').split(',').map((x) => (x || '').trim()).filter(Boolean);
+    return ips.some((ip) => bypassIps.includes(ip));
+  },
 });
 
 const registerLimiter = rateLimit({

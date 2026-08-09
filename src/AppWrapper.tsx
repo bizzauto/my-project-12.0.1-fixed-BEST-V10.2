@@ -130,8 +130,8 @@ const WebsiteBuilderProductPage = lazy(() => import('./components/WebsiteBuilder
 const ResellerDashboardPage = lazy(() => import('./components/ResellerDashboardPage'));
 const ResellerAuthPage = lazy(() => import('./components/ResellerAuthPage'));
 const WhiteLabelSettingsPage = lazy(() => import('./components/WhiteLabelSettingsPage'));
-const WaveSettings = lazy(() => import('./components/WaveSettings'));
 const PostHogSettings = lazy(() => import('./components/PostHogSettings'));
+const BizzBillsSettings = lazy(() => import('./components/BizzBillsSettings'));
 const OneSignalSettings = lazy(() => import('./components/OneSignalSettings'));
 const BrevoEmailSettings = lazy(() => import('./components/BrevoEmailSettings'));
 
@@ -866,18 +866,6 @@ function AppRoutes() {
         }
       />
 
-      {/* Wave Accounting Settings */}
-      <Route
-        path="/settings/wave"
-        element={
-          <ProtectedRoute>
-            <AuthLayout>
-              <WaveSettings />
-            </AuthLayout>
-          </ProtectedRoute>
-        }
-      />
-
       {/* PostHog Analytics Settings */}
       <Route
         path="/settings/posthog"
@@ -885,6 +873,18 @@ function AppRoutes() {
           <ProtectedRoute>
             <AuthLayout>
               <PostHogSettings />
+            </AuthLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* BizzBills Integration Settings */}
+      <Route
+        path="/settings/bizzbills"
+        element={
+          <ProtectedRoute>
+            <AuthLayout>
+              <BizzBillsSettings />
             </AuthLayout>
           </ProtectedRoute>
         }

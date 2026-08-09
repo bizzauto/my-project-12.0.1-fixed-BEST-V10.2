@@ -596,14 +596,10 @@ export const paymentLinksAPI = {
     apiClient.post('/payments/verify', { transactionId }),
 };
 
-export const waveAPI = {
-  getStatus: () => apiClient.get('/wave/status'),
-  getAuthUrl: () => apiClient.get('/wave/auth-url'),
-  disconnect: () => apiClient.post('/wave/disconnect'),
-  getAccounts: () => apiClient.get('/wave/accounts'),
-  syncInvoice: (invoiceId: string) => apiClient.post(`/wave/sync-invoice/${invoiceId}`),
-  syncAll: () => apiClient.post('/wave/sync-all'),
-  getLastSync: () => apiClient.get('/wave/last-sync'),
+export const bizzbillsAPI = {
+  getStatus: () => apiClient.get('/bizzbills/status'),
+  connect: (data: { email: string; password: string }) => apiClient.post('/bizzbills/connect', data),
+  disconnect: () => apiClient.post('/bizzbills/disconnect'),
 };
 
 export const posthogAnalyticsAPI = {

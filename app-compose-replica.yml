@@ -1,0 +1,56 @@
+services:
+  m3c0lqsr2ftta3azztxl135e-180429945705:
+    image: 'm3c0lqsr2ftta3azztxl135e:5e7c8356bdd062628b6dd6e74bf039a0a81f0db9'
+    container_name: m3c0lqsr2ftta3azztxl135e-180429945705
+    restart: unless-stopped
+    expose:
+      - '3000'
+    networks:
+      coolify:
+        aliases:
+          - m3c0lqsr2ftta3azztxl135e-180429945705
+    mem_limit: '0'
+    memswap_limit: '0'
+    mem_swappiness: 60
+    mem_reservation: '0'
+    cpus: 0.0
+    cpu_shares: 1024
+    env_file:
+      - .env
+    labels:
+      - caddy_0=https://bizzautoai.com
+      - caddy_0.encode=zstd gzip
+      - caddy_0.handle_path=/*
+      - 'caddy_0.handle_path.0_reverse_proxy={{upstreams 3000}}'
+      - caddy_0.header=-Server
+      - 'caddy_0.try_files={path} /index.html /index.php'
+      - caddy_ingress_network=coolify
+      - coolify.applicationId=25
+      - coolify.environmentName=production
+      - coolify.managed=true
+      - coolify.name=m3c0lqsr2ftta3azztxl135e
+      - coolify.projectName=my-first-project
+      - coolify.pullRequestId=0
+      - coolify.resourceName=my-project-1201-b-e-s-t-v101main-new
+      - coolify.serviceName=my-project-1201-b-e-s-t-v101main-new
+      - coolify.type=application
+      - coolify.version=4.1.2
+      - traefik.enable=true
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.routers.http-0-m3c0lqsr2ftta3azztxl135e.entryPoints=http
+      - traefik.http.routers.http-0-m3c0lqsr2ftta3azztxl135e.middlewares=redirect-to-https
+      - 'traefik.http.routers.http-0-m3c0lqsr2ftta3azztxl135e.rule=Host(`bizzautoai.com`) && PathPrefix(`/`)'
+      - traefik.http.routers.http-0-m3c0lqsr2ftta3azztxl135e.service=http-0-m3c0lqsr2ftta3azztxl135e
+      - traefik.http.routers.https-0-m3c0lqsr2ftta3azztxl135e.entryPoints=https
+      - traefik.http.routers.https-0-m3c0lqsr2ftta3azztxl135e.middlewares=gzip
+      - 'traefik.http.routers.https-0-m3c0lqsr2ftta3azztxl135e.rule=Host(`bizzautoai.com`) && PathPrefix(`/`)'
+      - traefik.http.routers.https-0-m3c0lqsr2ftta3azztxl135e.service=https-0-m3c0lqsr2ftta3azztxl135e
+      - traefik.http.routers.https-0-m3c0lqsr2ftta3azztxl135e.tls=true
+      - traefik.http.routers.https-0-m3c0lqsr2ftta3azztxl135e.tls.certresolver=letsencrypt
+      - traefik.http.services.http-0-m3c0lqsr2ftta3azztxl135e.loadbalancer.server.port=3000
+      - traefik.http.services.https-0-m3c0lqsr2ftta3azztxl135e.loadbalancer.server.port=3000
+
+networks:
+  coolify:
+    external: true

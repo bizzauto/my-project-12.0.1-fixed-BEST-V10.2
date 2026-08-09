@@ -1,0 +1,30 @@
+services:
+  evolution-api:
+    image: evoapicloud/evolution-api:v2.3.7
+    container_name: evolution-api
+    restart: unless-stopped
+    networks:
+      coolify:
+        aliases:
+          - evolution-api
+      ls3ehizkv5guirww9wlazwrv:
+        aliases:
+          - evolution-api
+    ports:
+      - "127.0.0.1:8090:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./store:/evolution/store
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  coolify:
+    external: true
+  ls3ehizkv5guirww9wlazwrv:
+    external: true
