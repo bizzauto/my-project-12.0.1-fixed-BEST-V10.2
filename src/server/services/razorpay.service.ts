@@ -14,11 +14,18 @@ if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
   console.log(`[Razorpay] Initialized with key: ${RAZORPAY_KEY_ID.substring(0, 8)}...`);
 }
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: RAZORPAY_KEY_ID || 'missing_key_id',
-  key_secret: RAZORPAY_KEY_SECRET || 'missing_key_secret',
-});
+// Initialize Razorpay lazily — only when keys are present
+let razorpay: InstanceType<typeof Razorpay> | null = null;
+
+function getRazorpay(): InstanceType<typeof Razorpay> {
+  if (!razorpay) {
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      throw new Error('Razorpay not configured — set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET');
+    }
+    razorpay = new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET });
+  }
+  return razorpay;
+}
 
 // Plan pricing
 export const PLAN_PRICES: Record<string, { month: number; year: number }> = {
@@ -80,7 +87,7 @@ export const createRazorpayOrder = async (
       },
     };
 
-    const order = await razorpay.orders.create(options);
+    const order = await getRazorpay().orders.create(options);
 
     return {
       success: true,
@@ -349,7 +356,7 @@ export const createSubscriptionPlan = async (
   interval: string
 ) => {
   try {
-    const plan = await razorpay.plans.create({
+    const plan = await getRazorpay().plans.create({
       period: interval === 'month' ? 'monthly' : 'yearly',
       interval: 1, // Every 1 period
       item: {
@@ -383,7 +390,7 @@ export const createSubscription = async (
   total_count: number
 ) => {
   try {
-    const subscription = await (razorpay.subscriptions.create as any)({
+    const subscription = await (getRazorpay().subscriptions.create as any)({
       plan_id: planId,
       customer_id: customerId,
       total_count,
@@ -406,7 +413,7 @@ export const createSubscription = async (
 // Cancel subscription
 export const cancelSubscription = async (subscriptionId: string) => {
   try {
-    const subscription = await razorpay.subscriptions.cancel(subscriptionId);
+    const subscription = await getRazorpay().subscriptions.cancel(subscriptionId);
     return {
       success: true,
       data: subscription,
@@ -423,7 +430,7 @@ export const cancelSubscription = async (subscriptionId: string) => {
 // Fetch subscription
 export const fetchSubscription = async (subscriptionId: string) => {
   try {
-    const subscription = await razorpay.subscriptions.fetch(subscriptionId);
+    const subscription = await getRazorpay().subscriptions.fetch(subscriptionId);
     return {
       success: true,
       data: subscription,
